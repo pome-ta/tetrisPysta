@@ -58,7 +58,6 @@
 
 - `MainScene`
 	- `ControllerView`
-		- 
 	- `GameView`
 		- 今度
 				- ロジックも考えなきゃ
