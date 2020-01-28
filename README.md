@@ -60,8 +60,8 @@
 	- `ControllerView`
 	- `GameView`
 		- 今度
-				- ロジックも考えなきゃ
-				- `ControllerView` で知見を蓄える
+					- ロジックも考えなきゃ
+					- `ControllerView` で知見を蓄える
 
 
 
