@@ -1,6 +1,26 @@
 import scene
 import ui
 
+# 書き分け
+# - colour
+# - position
+class Button(scene.ShapeNode):
+  def __init__(self,main_cls,fill_color):
+    super(Button, self).__init__(parent=main_cls)
+    self.touch = None
+    self.fill_color = str(fill_color)
+    self.path = ui.Path.oval(0,0,50,50)
+    #self.position = (main_cls.size)/2
+  
+  def touch_began(self,touch):
+    print(touch.location)
+    print(self.frame)
+    print(self.scene.size)
+    print(self)
+    if touch.location in (self.frame):
+      print('sub: きた')
+
+
 class MainScene(scene.Scene):
   def setup(self):
     xs = self.size[0]
@@ -36,14 +56,14 @@ class MainScene(scene.Scene):
     self.cntr_wrap=cntr_wrap
     self.safe_area.add_child(self.game_wrap)
     self.safe_area.add_child(self.cntr_wrap)
-    
-    cntr_div=scene.ShapeNode(ui.Path.rect(0,0,self.cntr_wrap.size[0]*.8,self.cntr_wrap.size[1]*.8),fill_color='goldenrod')
+
+    cntr_div=scene.ShapeNode(ui.Path.rect(0,0,self.cntr_wrap.size[0]*.64,self.cntr_wrap.size[1]*.8),fill_color='goldenrod')
     self.cntr_div=cntr_div
     self.cntr_wrap.add_child(self.cntr_div)
-    
+
     cnt_btn=ui.Path.oval(0,0,50,50)
-    
-    self.up_cnt=scene.ShapeNode(cnt_btn,fill_color='navy')
+
+    self.up_cnt=Button(self.cntr_div,'navy')
     self.up_cnt.position=0,self.cntr_div.size[1]/2-self.up_cnt.size[1]/2
     self.dn_cnt=scene.ShapeNode(cnt_btn,fill_color='darkgreen')
     self.dn_cnt.position=0,self.dn_cnt.size[1]/2-self.cntr_div.size[1]/2
@@ -51,8 +71,8 @@ class MainScene(scene.Scene):
     self.lf_cnt.position=self.lf_cnt.size[0]/2-self.cntr_div.size[0]/2,0
     self.rt_cnt=scene.ShapeNode(cnt_btn,fill_color='slateblue')
     self.rt_cnt.position=self.cntr_div.size[0]/2-self.rt_cnt.size[0]/2,0
-    
-    self.cntr_div.add_child(self.up_cnt)
+
+    #self.cntr_div.add_child(self.up_cnt)
     self.cntr_div.add_child(self.dn_cnt)
     self.cntr_div.add_child(self.lf_cnt)
     self.cntr_div.add_child(self.rt_cnt)
@@ -64,6 +84,9 @@ class MainScene(scene.Scene):
 
   def did_evaluate_actions(self):
     pass
+  def touch_began(self,touch):
+    print('main: きた')
+    self.up_cnt.touch_began(touch)
 
 
 main = MainScene()
