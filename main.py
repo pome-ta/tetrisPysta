@@ -1,99 +1,171 @@
 import scene
 import ui
 
-# 書き分け
-# - colour
-# - position
-class Button(scene.ShapeNode):
-  def __init__(self,main_cls,fill_color):
-    super(Button, self).__init__(parent=main_cls)
-    self.main_cls=main_cls
+
+class SafeArea(scene.ShapeNode):
+  def __init__(self,parent_cls):
+    super(SafeArea, self).__init__(parent=parent_cls)
+    self.parent_cls=parent_cls
+    self.touch = None
+    
+    _xs,_ys=parent_cls.size
+    rect =ui.Path.rect(0,0,_xs*.96,_ys*.92)
+    self.path = rect
+    self.fill_color = 'crimson'
+    self.position=parent_cls.size*.5
+    
+    self.game_wrap = GameWrap(self,fill_color='navy')
+    top_set = self.size[1]*.5-self.game_wrap.size[1]*.5
+    self.game_wrap.position = (0,top_set)
+    
+    self.controller_wrap = ControllerWrap(self,fill_color='hotpink',get_height=self.game_wrap.size[1])
+    bottom_set = self.controller_wrap.size[1]*.5-self.size[1]*.5
+    self.controller_wrap.position = (0,bottom_set)
+    
+  def touch_began(self,touch):
+    check_location = self.point_from_scene(touch.location)
+    
+    if check_location in (self.frame):
+      self.controller_wrap.touch_began(touch)
+  def touch_ended(self, touch):
+    check_location = self.point_from_scene(touch.location)
+    
+    if check_location in (self.frame):
+      self.controller_wrap.touch_ended(touch)
+
+
+class GameWrap(scene.ShapeNode):
+  def __init__(self,parent_cls,fill_color):
+    super(GameWrap, self).__init__(parent=parent_cls)
+    self.parent_cls=parent_cls
     self.touch = None
     self.fill_color = str(fill_color)
-    self.path = ui.Path.oval(0,0,50,50)
-    #self.position = (main_cls.size)/2
+    _xs,_ys = self.parent_cls.size
+    self.rect = ui.Path.rect(0,0,_xs,_ys*.78125)
+    self.path = self.rect
+    self.fill_color = str(fill_color)
+    
+
+
+class ControllerWrap(scene.ShapeNode):
+  def __init__(self,parent_cls,fill_color,get_height):
+    super(ControllerWrap, self).__init__(parent=parent_cls)
+    self.parent_cls=parent_cls
+    self.touch = None
+    self.fill_color = str(fill_color)
+    self.get_height = get_height
+    _xs,_ys = self.parent_cls.size
+    self.rect = ui.Path.rect(0,0,_xs,_ys-self.get_height)
+    self.path = self.rect
+    
+    self.controller_area = ControllerArea(self,fill_color='goldenrod')
   
   def touch_began(self,touch):
+    check_location = self.point_from_scene(touch.location)
     
-    p2s_s=self.point_to_scene(self.frame)
-    p4s_s=self.point_from_scene(self.frame)
-    p2s_p=self.point_to_scene(self.main_cls.frame)
-    p4s_p=self.point_from_scene(self.main_cls.frame)
+    if check_location in (self.frame):
+      self.controller_area.touch_began(touch)
     
-    rzlt = f'p2s_s:{p2s_s}\np4s_s:{p4s_s}\np2s_p:{p2s_p}\np4s_p:{p4s_p}\n{self.frame}'
-    print(rzlt)
+  def touch_ended(self, touch):
+    check_location = self.point_from_scene(touch.location)
+    
+    if check_location in (self.frame):
+      self.controller_area.touch_ended(touch)
+    
+
+class ControllerArea(scene.ShapeNode):
+  def __init__(self,parent_cls,fill_color):
+    super(ControllerArea, self).__init__(parent=parent_cls)
+    self.parent_cls=parent_cls
+    self.touch = None
+    
+    _xs,_ys = self.parent_cls.size
+    self.rect = ui.Path.rect(0,0,_xs*.64,_ys*.8)
+    self.path = self.rect
+    self.fill_color = str(fill_color)
+    
+    self.top_btn = Button(self,fill_color='navy')
+    self.btm_btn = Button(self,fill_color='darkgreen')
+    self.lft_btn = Button(self,fill_color='tomato')
+    self.rgt_btn = Button(self,fill_color='slateblue')
+    
+    self.top_btn.position = (0,(self.top_btn.size[1]))
+    self.btm_btn.position = (0,-(self.btm_btn.size[1]))
+    self.lft_btn.position = (-(self.lft_btn.size[0]),0)
+    self.rgt_btn.position = ((self.rgt_btn.size[0]),0)
+    
+  def touch_began(self,touch):
+    check_location = self.point_from_scene(touch.location)
+    
+    if check_location in (self.frame):
+      self.top_btn.touch_began(touch)
+      self.btm_btn.touch_began(touch)
+      self.lft_btn.touch_began(touch)
+      self.rgt_btn.touch_began(touch)
+  def touch_ended(self, touch):
+    check_location = self.point_from_scene(touch.location)
+    
+    if check_location in (self.frame):
+      self.top_btn.touch_ended(touch)
+      self.btm_btn.touch_ended(touch)
+      self.lft_btn.touch_ended(touch)
+      self.rgt_btn.touch_ended(touch)
+
+
+
+class Button(scene.ShapeNode):
+  def __init__(self,parent_cls,fill_color):
+    super(Button, self).__init__(parent=parent_cls)
+    self.parent_cls=parent_cls
+    self.touch = None
+    self.default_color = str(fill_color)
+    self.fill_color = self.default_color
+    self.path = ui.Path.oval(0,0,50,50)
+  
+  def touch_began(self,touch):
+    print('きた')
+    check_location = self.point_from_scene(touch.location)
+    
+    if check_location in (self.frame):
+      self.fill_color='steelblue'
+  
+  def touch_ended(self, touch):
+    check_location = self.point_from_scene(touch.location)
+    
+    if check_location in (self.frame):
+      self.fill_color=self.default_color
 
 
 class MainScene(scene.Scene):
   def setup(self):
-    xs = self.size[0]
-    ys = self.size[1]
-    rect =ui.Path.rect(0,0,xs*.96,ys*.92)
-    safe_area = scene.ShapeNode(rect,fill_color='darkgray')
-    safe_area.position=self.size/2
-    self.safe_area = safe_area
-    self.add_child(self.safe_area)
-    ypath = ui.Path()
-    xpath = ui.Path()
-    ypath.line_to(0,ys)
-    xpath.line_to(xs,0)
-    ypath.line_width = xpath.line_width = 1
-    self.yy = scene.ShapeNode(ypath,parent=self,stroke_color='red',position=(xs/2, ys/2))
-    self.xx = scene.ShapeNode(xpath,parent=self,stroke_color='red',position=(xs/2, ys/2))
-
-    self.background_color='crimson'
-
-    game_wrap = scene.ShapeNode(ui.Path.rect(0,0,self.safe_area.size[0],self.safe_area.size[1]/1.28),fill_color='lightgreen')
-
-    up_set=self.safe_area.size[1]/2-game_wrap.size[1]/2
-
-    game_wrap.position=(0,up_set)
-    self.game_wrap=game_wrap
-
-
-    cntr_wrap = scene.ShapeNode(ui.Path.rect(0,0,self.safe_area.size[0],self.safe_area.size[1]-game_wrap.size[1]),fill_color='lightskyblue')
-
-    dn_set=cntr_wrap.size[1]/2-self.safe_area.size[1]/2
-
-    cntr_wrap.position=(0,dn_set)
-    self.cntr_wrap=cntr_wrap
-    self.safe_area.add_child(self.game_wrap)
-    self.safe_area.add_child(self.cntr_wrap)
-
-    cntr_div=scene.ShapeNode(ui.Path.rect(0,0,self.cntr_wrap.size[0]*.64,self.cntr_wrap.size[1]*.8),fill_color='goldenrod')
-    self.cntr_div=cntr_div
-    self.cntr_wrap.add_child(self.cntr_div)
-
-    cnt_btn=ui.Path.oval(0,0,50,50)
-
-    self.up_cnt=Button(self.cntr_div,'navy')
-    self.up_cnt.position=0,self.cntr_div.size[1]/2-self.up_cnt.size[1]/2
-    self.dn_cnt=scene.ShapeNode(cnt_btn,fill_color='darkgreen')
-    self.dn_cnt.position=0,self.dn_cnt.size[1]/2-self.cntr_div.size[1]/2
-    self.lf_cnt=scene.ShapeNode(cnt_btn,fill_color='tomato')
-    self.lf_cnt.position=self.lf_cnt.size[0]/2-self.cntr_div.size[0]/2,0
-    self.rt_cnt=scene.ShapeNode(cnt_btn,fill_color='slateblue')
-    self.rt_cnt.position=self.cntr_div.size[0]/2-self.rt_cnt.size[0]/2,0
-
-    #self.cntr_div.add_child(self.up_cnt)
-    self.cntr_div.add_child(self.dn_cnt)
-    self.cntr_div.add_child(self.lf_cnt)
-    self.cntr_div.add_child(self.rt_cnt)
-
-
+    self.background_color='gray'
+    self.safe_area=SafeArea(self)
+    GuideLine(self)
 
   def update(self):
     pass
 
-  def did_evaluate_actions(self):
-    pass
   def touch_began(self,touch):
-    print('main: きた')
-    self.up_cnt.touch_began(touch)
+    self.safe_area.touch_began(touch)
+  def touch_ended(self, touch):
+    self.safe_area.touch_ended(touch)
 
+# アタリ線
+class GuideLine(scene.Node):
+  def __init__(self,parent_cls):
+    super(GuideLine, self).__init__(parent=parent_cls)
+    _xs,_ys=parent_cls.size
+    ypath = ui.Path()
+    xpath = ui.Path()
+    ypath.line_to(0,_ys)
+    xpath.line_to(_xs,0)
+    ypath.line_width = xpath.line_width = 1
+    self.yy = scene.ShapeNode(ypath,parent=self,stroke_color='red',position=(_xs*.5, _ys*.5))
+    self.xx = scene.ShapeNode(xpath,parent=self,stroke_color='red',position=(_xs*.5, _ys*.5))
 
 main = MainScene()
 scene.run(main,
+          orientation='PORTRAIT',
           frame_interval=2,
           show_fps=True)
 
