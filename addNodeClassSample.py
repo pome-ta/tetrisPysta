@@ -14,7 +14,8 @@ class SubNode(scene.ShapeNode):
   
   def touch_began(self,touch):
     if touch.location in (self.frame):
-      print('sub: きた')
+      print(f'{self.frame}')
+      
     
 
 class MainScene(scene.Scene):
@@ -27,7 +28,7 @@ class MainScene(scene.Scene):
     pass
     
   def touch_began(self,touch):
-    print('main: きた')
+    print(f'---{touch.location}')
     self.sub_node.touch_began(touch)
 
 main = MainScene()

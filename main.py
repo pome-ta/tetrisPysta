@@ -7,18 +7,21 @@ import ui
 class Button(scene.ShapeNode):
   def __init__(self,main_cls,fill_color):
     super(Button, self).__init__(parent=main_cls)
+    self.main_cls=main_cls
     self.touch = None
     self.fill_color = str(fill_color)
     self.path = ui.Path.oval(0,0,50,50)
     #self.position = (main_cls.size)/2
   
   def touch_began(self,touch):
-    print(touch.location)
-    print(self.frame)
-    print(self.scene.size)
-    print(self)
-    if touch.location in (self.frame):
-      print('sub: きた')
+    
+    p2s_s=self.point_to_scene(self.frame)
+    p4s_s=self.point_from_scene(self.frame)
+    p2s_p=self.point_to_scene(self.main_cls.frame)
+    p4s_p=self.point_from_scene(self.main_cls.frame)
+    
+    rzlt = f'p2s_s:{p2s_s}\np4s_s:{p4s_s}\np2s_p:{p2s_p}\np4s_p:{p4s_p}\n{self.frame}'
+    print(rzlt)
 
 
 class MainScene(scene.Scene):
