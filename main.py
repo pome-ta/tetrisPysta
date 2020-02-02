@@ -1,171 +1,140 @@
-import scene
-import ui
-
-
-class SafeArea(scene.ShapeNode):
-  def __init__(self,parent_cls):
-    super(SafeArea, self).__init__(parent=parent_cls)
-    self.parent_cls=parent_cls
-    self.touch = None
-    
-    _xs,_ys=parent_cls.size
-    rect =ui.Path.rect(0,0,_xs*.96,_ys*.92)
-    self.path = rect
-    self.fill_color = 'crimson'
-    self.position=parent_cls.size*.5
-    
-    self.game_wrap = GameWrap(self,fill_color='navy')
-    top_set = self.size[1]*.5-self.game_wrap.size[1]*.5
-    self.game_wrap.position = (0,top_set)
-    
-    self.controller_wrap = ControllerWrap(self,fill_color='hotpink',get_height=self.game_wrap.size[1])
-    bottom_set = self.controller_wrap.size[1]*.5-self.size[1]*.5
-    self.controller_wrap.position = (0,bottom_set)
-    
-  def touch_began(self,touch):
-    check_location = self.point_from_scene(touch.location)
-    
-    if check_location in (self.frame):
-      self.controller_wrap.touch_began(touch)
-  def touch_ended(self, touch):
-    check_location = self.point_from_scene(touch.location)
-    
-    if check_location in (self.frame):
-      self.controller_wrap.touch_ended(touch)
-
-
-class GameWrap(scene.ShapeNode):
-  def __init__(self,parent_cls,fill_color):
-    super(GameWrap, self).__init__(parent=parent_cls)
-    self.parent_cls=parent_cls
-    self.touch = None
-    self.fill_color = str(fill_color)
-    _xs,_ys = self.parent_cls.size
-    self.rect = ui.Path.rect(0,0,_xs,_ys*.78125)
-    self.path = self.rect
-    self.fill_color = str(fill_color)
-    
-
-
-class ControllerWrap(scene.ShapeNode):
-  def __init__(self,parent_cls,fill_color,get_height):
-    super(ControllerWrap, self).__init__(parent=parent_cls)
-    self.parent_cls=parent_cls
-    self.touch = None
-    self.fill_color = str(fill_color)
-    self.get_height = get_height
-    _xs,_ys = self.parent_cls.size
-    self.rect = ui.Path.rect(0,0,_xs,_ys-self.get_height)
-    self.path = self.rect
-    
-    self.controller_area = ControllerArea(self,fill_color='goldenrod')
-  
-  def touch_began(self,touch):
-    check_location = self.point_from_scene(touch.location)
-    
-    if check_location in (self.frame):
-      self.controller_area.touch_began(touch)
-    
-  def touch_ended(self, touch):
-    check_location = self.point_from_scene(touch.location)
-    
-    if check_location in (self.frame):
-      self.controller_area.touch_ended(touch)
-    
-
-class ControllerArea(scene.ShapeNode):
-  def __init__(self,parent_cls,fill_color):
-    super(ControllerArea, self).__init__(parent=parent_cls)
-    self.parent_cls=parent_cls
-    self.touch = None
-    
-    _xs,_ys = self.parent_cls.size
-    self.rect = ui.Path.rect(0,0,_xs*.64,_ys*.8)
-    self.path = self.rect
-    self.fill_color = str(fill_color)
-    
-    self.top_btn = Button(self,fill_color='navy')
-    self.btm_btn = Button(self,fill_color='darkgreen')
-    self.lft_btn = Button(self,fill_color='tomato')
-    self.rgt_btn = Button(self,fill_color='slateblue')
-    
-    self.top_btn.position = (0,(self.top_btn.size[1]))
-    self.btm_btn.position = (0,-(self.btm_btn.size[1]))
-    self.lft_btn.position = (-(self.lft_btn.size[0]),0)
-    self.rgt_btn.position = ((self.rgt_btn.size[0]),0)
-    
-  def touch_began(self,touch):
-    check_location = self.point_from_scene(touch.location)
-    
-    if check_location in (self.frame):
-      self.top_btn.touch_began(touch)
-      self.btm_btn.touch_began(touch)
-      self.lft_btn.touch_began(touch)
-      self.rgt_btn.touch_began(touch)
-  def touch_ended(self, touch):
-    check_location = self.point_from_scene(touch.location)
-    
-    if check_location in (self.frame):
-      self.top_btn.touch_ended(touch)
-      self.btm_btn.touch_ended(touch)
-      self.lft_btn.touch_ended(touch)
-      self.rgt_btn.touch_ended(touch)
-
-
-
-class Button(scene.ShapeNode):
-  def __init__(self,parent_cls,fill_color):
-    super(Button, self).__init__(parent=parent_cls)
-    self.parent_cls=parent_cls
-    self.touch = None
-    self.default_color = str(fill_color)
-    self.fill_color = self.default_color
-    self.path = ui.Path.oval(0,0,50,50)
-  
-  def touch_began(self,touch):
-    print('きた')
-    check_location = self.point_from_scene(touch.location)
-    
-    if check_location in (self.frame):
-      self.fill_color='steelblue'
-  
-  def touch_ended(self, touch):
-    check_location = self.point_from_scene(touch.location)
-    
-    if check_location in (self.frame):
-      self.fill_color=self.default_color
+import scene, ui
+import random
 
 
 class MainScene(scene.Scene):
   def setup(self):
-    self.background_color='gray'
-    self.safe_area=SafeArea(self)
-    GuideLine(self)
+    self.background_color='darkslategray'
+    self.default_color = 'seashell'
+    _sw, _sh = self.size
+    sw = _sw*.88
+    sh = _sh*.80
+    
+    # 10 x 20 のマス
+    self.div_x = 10
+    self.div_y = 21
+    b_w = sw/self.div_x
+    b_h = sh/self.div_y
+    
+    ground = scene.ShapeNode()
+    ground.path = ui.Path.rect(0,0,sw,sh)
+    ground.alpha = 0
+    self.add_child(ground)
+    ground.position = self.size*.5
+    
+    self.blocks = scene.Node()
+    self.add_child(self.blocks)
+    
+    b_x_count = 0
+    b_y_count = 0
+    
+    for block in range(self.div_x*self.div_y):
+      block = scene.ShapeNode(fill_color=self.default_color, path=ui.Path.rounded_rect(0,0,b_w,b_h,8), alpha=.5)
+      self.blocks.add_child(block)
+      block.position = (b_x_count*b_w, b_y_count*b_h)
+      b_x_count += 1
+      if b_x_count % self.div_x == 0:
+        b_y_count += 1
+        b_x_count =0
+
+    self.blocks.position = ((self.size - ground.size)*.5) + (block.size*.5)
+    
+    # todo: 最上部は、終わりフラグ
+    self.n = (self.div_x*self.div_y-self.div_x)-int(self.div_x/2)-1
+    
+    
+    #print(self.create_mino(n))
+    self.push_mino = self.create_mino(self.n)
+    self.post_mino = []
+    for i in self.push_mino:
+      self.blocks.children[i].fill_color = 'cyan'
+      
+    self.set_time = 0
+    self.end_time = 0
+    self.floor_line = [l for l in range(self.div_x)]
+    
+  def create_mino(self,n):
+    minos = [[n,n+1,n+2,n+3], [n,n+1,n+10,n+11],[n,n+1,n+11,n+12], [n+1,n+2,n+10,n+11], [n,n+1,n+2,n+10], [n,n+1,n+2,n+12], [n,n+1,n+2,n+11]]
+    randomNum = random.randint(0, 6)
+    return minos[randomNum]
 
   def update(self):
-    pass
+    self.set_time = int(self.t)
+    if int(self.t) != 0:
+      if self.set_time > self.end_time:
+        self.end_time = self.set_time
+        
+        if not(set(self.floor_line) & set(self.push_mino)):
+          
+          for i in self.push_mino:
+            self.blocks.children[i].fill_color = self.default_color
+          self.post_mino = self.push_mino
+          self.push_mino =[]
+          
+          for i in self.post_mino:
+            j = i-self.div_x
+            self.blocks.children[j].fill_color = 'cyan'
+            self.push_mino+=j,
+        else:
+          self.refloor_line = self.floor_line
+          self.floor_line = []
+          self.floor_line = list(set(self.refloor_line)|set(self.post_mino))
+          print(self.floor_line)
+          self.push_mino = self.create_mino(self.n)
 
-  def touch_began(self,touch):
-    self.safe_area.touch_began(touch)
-  def touch_ended(self, touch):
-    self.safe_area.touch_ended(touch)
-
-# アタリ線
-class GuideLine(scene.Node):
-  def __init__(self,parent_cls):
-    super(GuideLine, self).__init__(parent=parent_cls)
-    _xs,_ys=parent_cls.size
-    ypath = ui.Path()
-    xpath = ui.Path()
-    ypath.line_to(0,_ys)
-    xpath.line_to(_xs,0)
-    ypath.line_width = xpath.line_width = 1
-    self.yy = scene.ShapeNode(ypath,parent=self,stroke_color='red',position=(_xs*.5, _ys*.5))
-    self.xx = scene.ShapeNode(xpath,parent=self,stroke_color='red',position=(_xs*.5, _ys*.5))
 
 main = MainScene()
 scene.run(main,
           orientation='PORTRAIT',
           frame_interval=2,
           show_fps=True)
+
+
+
+'''
+# Tetrimino
+
+mino_I cyan
+▪︎▪︎▪︎▪︎
+
+00,01,02,03,04
+
+
+mino_O yellow
+▪︎▪︎
+▪︎▪︎
+10,11
+00,01
+
+mino_S green
+ ▪︎▪
+︎▪︎▪︎
+   11,12
+00,01
+
+mino_Z red
+▪︎▪︎
+ ▪︎▪︎
+10,11
+   01,02
+
+
+mino_J blue
+▪︎
+▪︎▪︎▪︎
+10
+00,01,02
+
+mino_L orange
+  ▪︎
+▪︎▪︎▪︎
+      
+00,01,02,03
+
+mino_T purple
+ ▪︎
+▪︎▪︎▪︎
+   11
+00,01,02
+'''
 
