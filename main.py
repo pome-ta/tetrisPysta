@@ -1,140 +1,136 @@
-import scene, ui
 import random
+import scene, ui
+from pprint import pprint
+
+
+class Block(scene.ShapeNode):
+  def __init__(self,_r,_c):
+    super(Block,self).__init__()
+    self.x = _r
+    self.y = _c
+    self.wall = False
+    self.fixed = False
+    self.active = False
+    
+  def is_wall(self):
+    self.fill_color = 'black'
+    self.wall = True
+
+
+class Blocks(scene.Node):
+  def __init__(self, row, clo, size):
+    super(Blocks,self).__init__()
+    self.row = row
+    self.clo = clo
+    size_x, size_y = size
+    self._w = size_x*.88
+    self._h = size_y*.72
+    self.bw = self._w/self.row
+    self.bh = self._h/self.clo
+    self.default_color = 'dimgray'
+    self.create_blocks()
+    
+  def create_blocks(self):
+    # fixme: 全ブロックを生成
+    self.block = [[self.set_block(r,c) for r in range(self.row)]for c in range(self.clo)]
+  
+  def set_block(self,r,c):
+    num = scene.LabelNode(f'{r},{c}',font = ('Ubuntu Mono',10))
+    path = ui.Path.rounded_rect(0, 0, self.bw, self.bh, 4)
+    _block = Block(r,c)
+    _block.path = path
+    _block.fill_color = self.default_color
+    _block.alpha = .5
+    _block.add_child(num)
+    _block.position = (_block.x*self.bw,_block.y*self.bh)
+    # fixme: 非表示blocks addしないとか ?
+    self.add_child(_block)
+    if _block.x == 0 or _block.y == self.clo-3:
+      if _block.x < 3 or _block.x > self.row-4:
+        _block.is_wall()
+    if _block.y == 0 or _block.x == self.row-1:
+      _block.is_wall()
+    return _block
+    
+  def drop_minos(self):
+    # fixme: 射出位置、要検討
+    drop_x =int(self.row/2)-1
+    doro_y=int(self.clo-2)
+    minos = self.create_minos(drop_x,doro_y)
+    push_minos = []
+    for mino in minos[:-1]:
+      # fixme: 逆？
+      c = mino[0]
+      r = mino[1]
+      self.block[r][c].fill_color = minos[-1]
+      self.block[r][c].active = True
+      push_minos += (r,c),
+    return push_minos
+    
+  def create_minos(self,drop_x,doro_y):
+    x = drop_x
+    y = doro_y
+    mino_i = [[x-1,y],[x,y],[x+1,y],[x+2,y],'cyan']
+    mino_o = [[x,y],[x,y+1],[x+1,y],[x+1,y+1],'yellow']
+    mino_s = [[x,y],[x+1,y],[x+1,y+1],[x+2,y+1],'green']
+    mino_z = [[x+1,y],[x+2,y],[x+1,y+1],[x,y+1],'red']
+    mino_j = [[x,y],[x+1,y],[x+2,y],[x,y+1],'blue']
+    mino_l = [[x,y],[x+1,y],[x+2,y],[x+2,y+1],'orange']
+    mino_t = [[x,y],[x+1,y],[x+2,y],[x+1,y+1],'purple']
+    
+    minos_all = [mino_i,mino_o,mino_s,mino_z,mino_j,mino_l,mino_t]
+    return minos_all[random.randint(0,len(minos_all)-1)]
+    
 
 
 class MainScene(scene.Scene):
   def setup(self):
-    self.background_color='darkslategray'
-    self.default_color = 'seashell'
-    _sw, _sh = self.size
-    sw = _sw*.88
-    sh = _sh*.80
-    
-    # 10 x 20 のマス
-    self.div_x = 10
-    self.div_y = 21
-    b_w = sw/self.div_x
-    b_h = sh/self.div_y
-    
-    ground = scene.ShapeNode()
-    ground.path = ui.Path.rect(0,0,sw,sh)
-    ground.alpha = 0
-    self.add_child(ground)
-    ground.position = self.size*.5
-    
-    self.blocks = scene.Node()
+    clo = 24
+    row = 12
+    self.background_color = 'darkslategray'
+    self.blocks = Blocks(row,clo,self.size)
     self.add_child(self.blocks)
     
-    b_x_count = 0
-    b_y_count = 0
-    
-    for block in range(self.div_x*self.div_y):
-      block = scene.ShapeNode(fill_color=self.default_color, path=ui.Path.rounded_rect(0,0,b_w,b_h,8), alpha=.5)
-      self.blocks.add_child(block)
-      block.position = (b_x_count*b_w, b_y_count*b_h)
-      b_x_count += 1
-      if b_x_count % self.div_x == 0:
-        b_y_count += 1
-        b_x_count =0
-
-    self.blocks.position = ((self.size - ground.size)*.5) + (block.size*.5)
-    
-    # todo: 最上部は、終わりフラグ
-    self.n = (self.div_x*self.div_y-self.div_x)-int(self.div_x/2)-1
+    self.blocks.position = (self.size[0]*.5-self.blocks.bbox[2]*.5+self.blocks.bw*.5,
+    self.size[1]*.5-self.blocks.bbox[3]*.5+self.blocks.bh*2)
     
     
-    #print(self.create_mino(n))
-    self.push_mino = self.create_mino(self.n)
-    self.post_mino = []
-    for i in self.push_mino:
-      self.blocks.children[i].fill_color = 'cyan'
-      
-    self.set_time = 0
-    self.end_time = 0
-    self.floor_line = [l for l in range(self.div_x)]
+    self.push_minos = self.blocks.drop_minos()
+    #print(self.push_minos)
     
-  def create_mino(self,n):
-    minos = [[n,n+1,n+2,n+3], [n,n+1,n+10,n+11],[n,n+1,n+11,n+12], [n+1,n+2,n+10,n+11], [n,n+1,n+2,n+10], [n,n+1,n+2,n+12], [n,n+1,n+2,n+11]]
-    randomNum = random.randint(0, 6)
-    return minos[randomNum]
-
-  def update(self):
-    self.set_time = int(self.t)
-    if int(self.t) != 0:
-      if self.set_time > self.end_time:
-        self.end_time = self.set_time
+    # --- btn
+    self.btn = scene.ShapeNode()
+    self.btn.path = ui.Path.oval(0,0,88,88)
+    self.btn.position = self.size*.5
+    self.btn.position -= (0,self.size[1]/2-self.btn.size[1]/1.28)
+    self.add_child(self.btn)
+    
+  def touch_began(self, touch):
+    if touch.location in (self.btn.frame):
+      self.btn.alpha = .5
+      self.pull_minos = self.push_minos
+      count = 0
+      for i in self.pull_minos:
+        y_af,x_af = y_be, x_be = i
+        be_minos = self.blocks.block[y_be][x_be]
+        if not be_minos.wall:
+          y_af -= 1
+          af_minos = self.blocks.block[y_af][x_af]
+          set_color = be_minos.fill_color
+          be_minos.fill_color = self.blocks.default_color
+          af_minos.fill_color = set_color
+          
+          self.pull_minos[count] = (y_af,x_af)
+          count+=1
+          
         
-        if not(set(self.floor_line) & set(self.push_mino)):
-          
-          for i in self.push_mino:
-            self.blocks.children[i].fill_color = self.default_color
-          self.post_mino = self.push_mino
-          self.push_mino =[]
-          
-          for i in self.post_mino:
-            j = i-self.div_x
-            self.blocks.children[j].fill_color = 'cyan'
-            self.push_mino+=j,
-        else:
-          self.refloor_line = self.floor_line
-          self.floor_line = []
-          self.floor_line = list(set(self.refloor_line)|set(self.post_mino))
-          print(self.floor_line)
-          self.push_mino = self.create_mino(self.n)
-
+    
+  def touch_ended(self, touch):
+    if touch.location in (self.btn.frame):
+      self.btn.alpha = 1
 
 main = MainScene()
 scene.run(main,
           orientation='PORTRAIT',
           frame_interval=2,
           show_fps=True)
-
-
-
-'''
-# Tetrimino
-
-mino_I cyan
-▪︎▪︎▪︎▪︎
-
-00,01,02,03,04
-
-
-mino_O yellow
-▪︎▪︎
-▪︎▪︎
-10,11
-00,01
-
-mino_S green
- ▪︎▪
-︎▪︎▪︎
-   11,12
-00,01
-
-mino_Z red
-▪︎▪︎
- ▪︎▪︎
-10,11
-   01,02
-
-
-mino_J blue
-▪︎
-▪︎▪︎▪︎
-10
-00,01,02
-
-mino_L orange
-  ▪︎
-▪︎▪︎▪︎
-      
-00,01,02,03
-
-mino_T purple
- ▪︎
-▪︎▪︎▪︎
-   11
-00,01,02
-'''
-
