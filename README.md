@@ -18,6 +18,7 @@
 # メモ
 # Tetrimino
 
+```
 mino_I cyan
 ▪︎▪︎▪︎▪︎
 
