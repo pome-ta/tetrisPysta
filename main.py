@@ -32,7 +32,7 @@ class Blocks(scene.Node):
     
   def create_blocks(self):
     # fixme: 全ブロックを生成
-    self.block = [[self.set_block(r,c) for r in range(self.row)]for c in range(self.clo)]
+    self.block = [[self.set_block(r,c) for c in range(self.clo)]for r in range(self.row)]
   
   def set_block(self,r,c):
     num = scene.LabelNode(f'{r},{c}',font = ('Ubuntu Mono',10))
@@ -59,9 +59,8 @@ class Blocks(scene.Node):
     minos = self.create_minos(drop_x,doro_y)
     push_minos = []
     for mino in minos[:-1]:
-      # fixme: 逆？
-      c = mino[0]
-      r = mino[1]
+      r = mino[0]
+      c = mino[1]
       self.block[r][c].fill_color = minos[-1]
       self.block[r][c].active = True
       push_minos += (r,c),
@@ -89,14 +88,11 @@ class MainScene(scene.Scene):
     row = 12
     self.background_color = 'darkslategray'
     self.blocks = Blocks(row,clo,self.size)
-    self.add_child(self.blocks)
-    
     self.blocks.position = (self.size[0]*.5-self.blocks.bbox[2]*.5+self.blocks.bw*.5,
     self.size[1]*.5-self.blocks.bbox[3]*.5+self.blocks.bh*2)
-    
-    
+    self.add_child(self.blocks)
     self.push_minos = self.blocks.drop_minos()
-    #print(self.push_minos)
+    self.blocks.block[0][0].fill_color = 'red'
     
     # --- btn
     self.btn = scene.ShapeNode()
@@ -111,16 +107,16 @@ class MainScene(scene.Scene):
       self.pull_minos = self.push_minos
       count = 0
       for i in self.pull_minos:
-        y_af,x_af = y_be, x_be = i
-        be_minos = self.blocks.block[y_be][x_be]
+        x_af,y_af = x_be, y_be = i
+        be_minos = self.blocks.block[x_be][y_be]
         if not be_minos.wall:
           y_af -= 1
-          af_minos = self.blocks.block[y_af][x_af]
+          af_minos = self.blocks.block[x_af][y_af]
           set_color = be_minos.fill_color
           be_minos.fill_color = self.blocks.default_color
           af_minos.fill_color = set_color
           
-          self.pull_minos[count] = (y_af,x_af)
+          self.pull_minos[count] = (x_af,y_af)
           count+=1
           
         
