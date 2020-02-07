@@ -2,7 +2,6 @@ from random import randint
 from itertools import product
 import scene, ui
 
-from pprint import pprint
 
 
 class Block(scene.ShapeNode):
@@ -18,7 +17,6 @@ class Block(scene.ShapeNode):
     self.fill_color = 'black'
     # fixme: いらないかも
     self.wall = True
-
 
 class TetrisMain(scene.Node):
   def __init__(self, row, clo, size):
@@ -47,18 +45,23 @@ class TetrisMain(scene.Node):
     _block.position = (
       _block.x*self.bw, _block.y*self.bh
       )
-    # todo: top の非表示blocks
+    # todo: 外壁作成
+    '''
     if not(_block.y > self.clo-3):
       self.add_child(_block)
-    # todo: 外壁作成
-    if _block.x == 0 or _block.y == self.clo-3:
-      if _block.x < 3 or _block.x > self.row-4:
-        _block.is_wall()
-    if _block.x == self.row-1:
-      _block.is_wall()
+    '''
+    self.add_child(_block)
+    if _block.x < 3:
+      if _block.y > self.clo-4 or _block.x == 0:
+        self.fixed_line += [_block.x,_block.y],
+        _block.fill_color = 'skyblue'
+    if _block.x > self.row-4:
+      if _block.y > self.clo-4 or _block.x == self.row-1:
+        self.fixed_line += [_block.x,_block.y],
+        _block.fill_color = 'skyblue'
     if _block.y == 0:
-      _block.is_wall()
       self.fixed_line += [_block.x,_block.y],
+      _block.fill_color = 'skyblue'
     
     # todo: debug 用 (座標出す)
     num = scene.LabelNode(f'{r},{c}', font = ('Ubuntu Mono', 10))
@@ -68,8 +71,12 @@ class TetrisMain(scene.Node):
     
   def drop_minos(self):
     # fixme: 射出位置、要検討
+    #drop_x =int(self.row / 2)-1
+    #doro_y=int(self.clo -2)
+    
     drop_x =int(self.row / 2)-1
-    doro_y=int(self.clo -2)
+    doro_y=int(self.clo/2)
+    
     minos = self.create_minos(drop_x, doro_y)
     put_minos = []
     for mino in minos[:-1]:
@@ -80,28 +87,28 @@ class TetrisMain(scene.Node):
     return put_minos
     
   def create_minos(self, drop_x, doro_y):
-    x = drop_x
-    y = doro_y
-    mino_i = [[x-1,y],[x,y],
-              [x+1,y],[x+2,y],
+    bx = drop_x
+    by = doro_y
+    mino_i = [[bx-1,by],[bx,by],
+              [bx+1,by],[bx+2,by],
               'cyan']
-    mino_o = [[x,y],[x,y+1],
-              [x+1,y],[x+1,y+1],
+    mino_o = [[bx,by],[bx,by+1],
+              [bx+1,by],[bx+1,by+1],
               'yellow']
-    mino_s = [[x,y],[x+1,y],
-              [x+1,y+1],[x+2,y+1],
+    mino_s = [[bx,by],[bx+1,by],
+              [bx+1,by+1],[bx+2,by+1],
               'green']
-    mino_z = [[x+1,y],[x+2,y],
-              [x+1,y+1],[x,y+1],
+    mino_z = [[bx+1,by],[bx+2,by],
+              [bx+1,by+1],[bx,by+1],
               'red']
-    mino_j = [[x,y],[x+1,y],
-              [x+2,y],[x,y+1],
+    mino_j = [[bx,by],[bx+1,by],
+              [bx+2,by],[bx,by+1],
               'blue']
-    mino_l = [[x,y],[x+1,y],
-              [x+2,y],[x+2,y+1],
+    mino_l = [[bx,by],[bx+1,by],
+              [bx+2,by],[bx+2,by+1],
               'orange']
-    mino_t = [[x,y],[x+1,y],
-              [x+2,y],[x+1,y+1],
+    mino_t = [[bx,by],[bx+1,by],
+              [bx+2,by],[bx+1,by+1],
               'purple']
     all = [mino_i, mino_o, mino_s,
              mino_z, mino_j, mino_l,
@@ -121,6 +128,7 @@ class MainScene(scene.Scene):
       )
     self.add_child(self.tm)
     self.put_minos = self.tm.drop_minos()
+    self.take_minos = []
     
     # --- btn start
     self.btn = scene.ShapeNode()
@@ -131,35 +139,121 @@ class MainScene(scene.Scene):
       self.size[1]/2-self.btn.size[1]/1.28
       )
     self.add_child(self.btn)
+    
+    self.btn1 = scene.ShapeNode()
+    self.btn1.path = ui.Path.oval(0,0,88,88)
+    self.btn1.fill_color = 'red'
+    self.btn1.position = self.size*.5
+    self.btn1.position -= (
+      +(self.btn1.size[0]),
+      self.size[1]/2-self.btn1.size[1]/1.28
+      )
+    self.add_child(self.btn1)
+    
+    self.btn2 = scene.ShapeNode()
+    self.btn2.path = ui.Path.oval(0,0,88,88)
+    self.btn2.fill_color = 'blue'
+    self.btn2.position = self.size*.5
+    self.btn2.position -= (
+      -(self.btn1.size[0]),
+      self.size[1]/2-self.btn2.size[1]/1.28
+      )
+    self.add_child(self.btn2)
     # --- btn end
     
   def touch_began(self, touch):
+    fnc_minos = self.put_minos
     if touch.location in (self.btn.frame):
       self.btn.alpha = .5
-      self.take_minos = []
-      for b in self.put_minos:
-        x, y = b
-        y -= 1
-        self.take_minos += [x, y],
-      for t, p in product(self.take_minos,self.tm.fixed_line):
-        if t == p:
-          self.tm.fixed_line += self.put_minos
-          self.put_minos = self.tm.drop_minos()
-          break
-      else:
-        for take, put in zip(self.take_minos,self.put_minos):
-          tx, ty = take
-          px, py = put
-          take_block = self.tm.block[tx][ty]
-          put_block = self.tm.block[px][py]
-          set_color = put_block.fill_color
-          take_block.fill_color = set_color
-          put_block.fill_color = self.tm.default_color
-        self.put_minos = self.take_minos
+      self.down_action(fnc_minos)
+    if touch.location in (self.btn1.frame):
+      self.btn1.alpha = .5
+      self.put_minos = self.l_action(fnc_minos)
+    if touch.location in (self.btn2.frame):
+      self.btn2.alpha = .5
+      self.put_minos = self.r_action(fnc_minos)
         
   def touch_ended(self, touch):
     if touch.location in (self.btn.frame):
       self.btn.alpha = 1
+    if touch.location in (self.btn1.frame):
+      self.btn1.alpha = 1
+    if touch.location in (self.btn2.frame):
+      self.btn2.alpha = 1
+      
+  def l_action(self, fnc_minos):
+    put_minos = fnc_minos
+    take_minos = self.take_minos
+    take_minos = []
+    for r in put_minos:
+      xr, yr = r
+      xr -= 1
+      take_minos += [xr, yr],
+    minos_len = len(put_minos)
+    set_minos = put_minos + take_minos
+    set_color = self.tm.block[put_minos[0][0]][put_minos[0][1]].fill_color
+    for take, fix in product(take_minos, self.tm.fixed_line):
+      if take == fix:
+        self.put_minos = put_minos
+        break
+    else:
+      for n, i in enumerate(set_minos):
+        if n < minos_len:
+          self.tm.block[i[0]][i[1]].fill_color = self.tm.default_color
+        else:
+          self.tm.block[i[0]][i[1]].fill_color = set_color
+      self.put_minos = take_minos
+    return self.put_minos
+  
+  def r_action(self, fnc_minos):
+    put_minos = fnc_minos
+    take_minos = self.take_minos
+    take_minos = []
+    for r in put_minos:
+      xr, yr = r
+      xr += 1
+      take_minos += [xr, yr],
+    minos_len = len(put_minos)
+    set_minos = put_minos + take_minos
+    set_color = self.tm.block[put_minos[0][0]][put_minos[0][1]].fill_color
+    for take, fix in product(take_minos, self.tm.fixed_line):
+      if take == fix:
+        self.put_minos = put_minos
+        break
+    else:
+      for n, i in enumerate(set_minos):
+        if n < minos_len:
+          self.tm.block[i[0]][i[1]].fill_color = self.tm.default_color
+        else:
+          self.tm.block[i[0]][i[1]].fill_color = set_color
+      self.put_minos = take_minos
+    return self.put_minos
+    
+  def down_action(self, fnc_minos):
+    put_minos = fnc_minos
+    take_minos = self.take_minos
+    take_minos = []
+    for r in put_minos:
+      xr, yr = r
+      yr -= 1
+      take_minos += [xr, yr],
+    minos_len = len(put_minos)
+    set_minos = put_minos + take_minos
+    set_color = self.tm.block[put_minos[0][0]][put_minos[0][1]].fill_color
+    for take, fix in product(take_minos, self.tm.fixed_line):
+      if take == fix:
+        self.tm.fixed_line += self.put_minos
+        self.put_minos = self.tm.drop_minos()
+        break
+    else:
+      for n, i in enumerate(set_minos):
+        if n < minos_len:
+          self.tm.block[i[0]][i[1]].fill_color = self.tm.default_color
+        else:
+          self.tm.block[i[0]][i[1]].fill_color = set_color
+      self.put_minos = take_minos
+    return self.put_minos
+   
 
 main = MainScene()
 scene.run(main,

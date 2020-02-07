@@ -4,6 +4,94 @@
 
 
 
+
+📝 2020/02/07
+
+# mino の移動時の`x += 1` 挙動について
+
+
+マイナス時には、
+
+- 今のブロック -> 移動後ブロック
+
+のカラーのパス
+
+
+- 今のブロック
+
+default の色
+
+
+プラス時に、何故か、default 色範囲がデカくなっちゃう
+
+
+
+## ダメ 🙅‍♂️
+
+``` py
+for b in self.put_minos:
+  x, y = b
+  y -= 1
+  self.take_minos += [x, y],
+
+for t, p in product(self.take_minos, self.tm.fixed_line):
+  if t == p:
+    self.tm.fixed_line += self.put_minos
+    self.put_minos = self.tm.drop_minos()
+    break
+else:
+  for take, put in zip(self.take_minos,self.put_minos):
+    tx, ty = take
+    px, py = put
+    take_block = self.tm.block[tx][ty]
+    put_block = self.tm.block[px][py]
+    set_color = put_block.fill_color
+    take_block.fill_color = set_color
+    put_block.fill_color = self.tm.default_color
+  self.put_minos = self.take_minos
+```
+
+
+
+
+## きた 🙆‍♂️
+
+変えるblockと、動いているblockを一括でlist ぶち込んで
+
+
+index 指定で、block色とdefault色をつけていくで解決
+
+
+``` py
+minos_len = len(put_minos)
+set_minos = put_minos + take_minos
+set_color = self.tm.block[put_minos[0][0]][put_minos[0][1]].fill_color
+for take, fix in product(take_minos, self.tm.fixed_line):
+  if take == fix:
+    self.put_minos = put_minos
+    break
+else:
+  for n, i in enumerate(set_minos):
+    if n < minos_len:
+      self.tm.block[i[0]][i[1]].fill_color = self.tm.default_color
+    else:
+      self.tm.block[i[0]][i[1]].fill_color = set_color
+  self.put_minos = take_minos
+return self.put_minos
+```
+
+
+# 関数のスコープ
+
+`self` ものを 関数内の変数にさせて、汚染を回避
+
+
+`block[x][y]` の、リストだけで管理してるので、メモリはあまり使ってないと思われる(shape オブジェクトを格納させないようにしてる)
+
+
+---
+
+
 📝 2020/02/06
 
 # 落下 and 当たり判定
