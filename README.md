@@ -1,5 +1,18 @@
 # tetrisPysta
 
+## rule
+
+資料を見ずに記憶で実装しる 😤
+
+
+現在は、Wikipedia [Tetris](https://ja.m.wikipedia.org/wiki/%E3%83%86%E3%83%88%E3%83%AA%E3%82%B9)
+
+- mino 種類
+- マス目
+
+のみ、参照
+
+
 > 2020/01/27 作成
 
 
