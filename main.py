@@ -34,6 +34,7 @@ class Block(scene.ShapeNode):
     self.fill_color = self.fill_color
     self.fixed = self.fixed
     return self.fill_color, self.fixed
+  
   def get(self, push):
     self.fill_color = push[0]
     self.fixed = push[1]
@@ -45,7 +46,7 @@ class TetrisMain(scene.Node):
     self.row = 12#12
     self.clo = 24#24
     # todo: 大きくなると遅くなる
-    self.play_speed = 1
+    self.play_speed = 2
     self.dt = 0.0
     self.parent_x, self.parent_y = parent_size
     self.w = self.parent_x*.92
@@ -62,6 +63,21 @@ class TetrisMain(scene.Node):
     self.line_y = self.clo-3
     self.start()
   
+  def start(self):
+    self.create_field()
+    self.mino = self.push_mino(self.set_root)
+    return self.mino
+  
+  def create_mino(self):
+    all = self.types_mino()
+    #return all[randint(0,len(all)-1)]
+    return all[randint(0,1)]
+    
+  def push_mino(self, set_root):
+    mino = self.create_mino()
+    self.active_mino(mino, set_root)
+    return mino
+  
   def create_field(self):
     self.blocks = [[self.setup_blocks(r, c) for c in range(self.clo)]for r in range(self.row)]
     x_pos = (self.parent_x*.5
@@ -76,7 +92,7 @@ class TetrisMain(scene.Node):
     block = Block(r,c)
     path = ui.Path.rounded_rect
     block.path = path(0, 0,
-                 self.bw, self.bh, 6)
+                 self.bw, self.bh, 8)
     block.position = (block.x*self.bw,
                       block.y*self.bh)
     self.set_wall(block)
@@ -107,21 +123,17 @@ class TetrisMain(scene.Node):
       block.is_wall()
   
   
-  def rotate_minos(self, mino):
-    if mino['name'] == 'i':
-      if mino['rotate'] == 1:
-        mino['rotate'] = 0
-        mino['set'] = [[0,1],[0,0],[0,-1],[0,-2]]
-      else:
-        mino['rotate'] = 1
-        mino['set'] = [[-1,0],[0,0],[1,0],[2,0]]
-    return mino
+  def formation_mino(self, name, rotate):
+    pass
   
-  def minos_type(self):
+  def types_mino(self):
+    # fixme: 回転を考慮して、'set' 処理を変える？
+    # fixme: setup_mino(hoge) 作るか
     mino_i = {
       'name':'i',
       'root':[0,0],
       'set':[[-1,0],[0,0],[1,0],[2,0]],
+      #'set':self.formation_mino(),
       'color':'cyan',
       'rotate':1,
       'id':0,}
@@ -169,19 +181,15 @@ class TetrisMain(scene.Node):
       'id':6,}
     return [mino_i, mino_o, mino_s, mino_z, mino_j, mino_l, mino_t]
     
-  def start(self):
-    self.create_field()
-    self.mino = self.push_mino(self.set_root)
-    return self.mino
-  
-  def create_mino(self):
-    all = self.minos_type()
-    #return all[randint(0,len(all)-1)]
-    return all[randint(0,1)]
-    
-  def push_mino(self, set_root):
-    mino = self.create_mino()
-    self.active_mino(mino, set_root)
+  def rotate_minos(self, mino):
+    # fixme: ここで、変えちゃだめみたい
+    if mino['name'] == 'i':
+      if mino['rotate'] == 1:
+        mino['rotate'] = 0
+        mino['set'] = [[0,1],[0,0],[0,-1],[0,-2]]
+      else:
+        mino['rotate'] = 1
+        mino['set'] = [[-1,0],[0,0],[1,0],[2,0]]
     return mino
   
   def select_mino(self, mino, root=None):
@@ -208,6 +216,7 @@ class TetrisMain(scene.Node):
       self.blocks[bx][by].is_default()
     
   def pre_mino(self, mino, n):
+    # fixme: 回転は別処理かな？
     pre_set = []
     if n == 0:pre = [0,-1]
     if n == 1:pre = [-1,0]
@@ -215,7 +224,6 @@ class TetrisMain(scene.Node):
     if n == 3:
       pre = [0,0]
       mino = self.rotate_minos(mino)
-    
     root = mino.get('root')
     root = [x+y for x,y in zip(pre, root)]
     for set in mino.get('set'):
@@ -231,10 +239,10 @@ class TetrisMain(scene.Node):
     return root
     
   def move_mino(self, mino, n):
-    f = self.pre_mino(mino, n)
-    if f:
+    root = self.pre_mino(mino, n)
+    if root:
       self.default_mino(mino)
-      self.active_mino(mino,f)
+      self.active_mino(mino,root)
   
   def do_fixed(self, mino):
     fixed = self.select_mino(mino)
@@ -258,8 +266,7 @@ class TetrisMain(scene.Node):
             else: continue
           else: continue
       else: continue
-          
-              
+  
   def clear_line(self, fix, fixed_blocks):
     for set in fix:
       bx, by = set
@@ -282,14 +289,11 @@ class TetrisMain(scene.Node):
     self.fixed_bloks = fixed_blocks
     return self.fixed_bloks
   
-  
   def cf(self):
     if self.play_speed == 1:
       self.play_speed = 500
     else: self.play_speed = 1
     
-              
-  
   def manage_update(self, main_dt):
     self.dt += main_dt
     if self.dt > self.play_speed:
@@ -330,7 +334,6 @@ class MainScene(scene.Scene):
     
   def update(self):
     self.tetris.manage_update(self.dt)
-    
     
   def touch_began(self, touch):
     if touch.location in (self.d_btn.frame):
