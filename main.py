@@ -52,25 +52,64 @@ class SetUpMinos:
                 [[1,-2],[1,-1],[1,0],[1,1]],
                 [[-1,-1],[0,-1],[1,-1],[2,-1]],
                 [[0,-2],[0,-1],[0,0],[0,1]])
-
-    o_rotate = ([[0,0],[0,1],[1,0],[1,1]])
-
     mino_i = {'name': 'i',
               'color': 'cyan',
               'rotate': i_rotate,}
+    
+    o_rotate = ([[0,0],[0,1],[1,0],[1,1]])
     mino_o = {'name': 'o',
               'color': 'yellow',
               'rotate': o_rotate,}
-    # fixme: 他のmino も続くでー
-    self.mino_list = [mino_i, mino_o]
+    
+    s_rotate = ([[-1,0],[0,0],[0,1],[1,1]],
+                [[0,1],[0,0],[1,0],[1,-1]],
+                [[-1,-1],[0,-1],[0,0],[1,0]],
+                [[-1,1],[-1,0],[0,0],[0,-1]])
+    mino_s = {'name': 's',
+              'color': 'green',
+              'rotate': s_rotate,}
+    
+    z_rotate = ([[0,1],[1,1],[1,0],[2,0]],
+                [[1,0],[1,1],[2,2],[2,1]],
+                [[0,2],[1,2],[1,1],[2,1]],
+                [[0,0],[0,1],[1,2],[1,1]])
+    mino_z = {'name': 'z',
+              'color': 'red',
+              'rotate': z_rotate,}
+    
+    j_rotate = ([[0,0],[1,0],[2,0],[0,1]],
+                [[1,1],[1,0],[2,1],[1,-1]],
+                [[0,0],[1,0],[2,-1],[2,0]],
+                [[1,1],[1,0],[0,-1],[1,-1]])
+    mino_j = {'name': 'j',
+              'color': 'blue',
+              'rotate': j_rotate,}
+    
+    l_rotate = ([[0,0],[1,0],[2,0],[2,1]],
+                [[1,1],[1,0],[2,-1],[1,-1]],
+                [[0,0],[1,0],[0,-1],[2,0]],
+                [[1,1],[1,0],[1,-1],[0,1]])
+    mino_l = {'name': 'l',
+              'color': 'orange',
+              'rotate': l_rotate,}
+    
+    t_rotate =([[0,0],[1,0],[2,0],[1,1]],
+              [[1,-1],[1,0],[2,0],[1,1]],
+              [[1,-1],[1,0],[2,0],[0,0]],
+              [[1,-1],[1,0],[1,1],[0,0]])
+    mino_t = {'name': 't',
+              'color': 'purple',
+              'rotate': t_rotate,}
+    
+    self.mino_list = [mino_i, mino_o, mino_s, mino_z, mino_j, mino_l, mino_t]
 
   def push(self):
     mino = self.get_list(self.mino_list)
     self.set(mino)
     return mino
   
-  def get_list(self, mino_list):
-    return mino_list[randint(0, 1)]
+  def get_list(self, m_list):
+    return m_list[randint(0, len(m_list)-1)]
     
   def set(self, mino):
     mino['root'] = [0,0]
@@ -152,8 +191,7 @@ class TetrisMain(scene.Node):
     self.actn = ActionMinos()
 
     self.set_x = int(self.row/2)-1
-    #self.start_y = int(self.clo -2)
-    self.set_y = int(self.clo/2)
+    self.set_y = int(self.clo -2)
     self.set_root = [self.set_x, self.set_y]
     self.wall_bloks = []
     self.fixed_bloks =[]
@@ -171,9 +209,6 @@ class TetrisMain(scene.Node):
     self.color_mino(mino)
     self.mino = mino
     return self.mino
-  
-  def create_shadow(self):
-    pass
   
   def create_field(self):
     self.blocks = [[self.setup_blocks(r, c) for c in range(self.clo)]for r in range(self.row)]
@@ -415,38 +450,4 @@ scene.run(main,
           frame_interval=2,
           show_fps=True)
 
-
-
-'''
-mino_s = {'name':'s',
-          'color':'green',
-          'rotate':,}
-mino_z = {
-  'name':'z',
-  'root':[0,0],
-  'set':[[1,0],[2,0],[1,1],[0,1]],
-  'color':'red',
-  'rotate':1,
-  'id':3,}
-mino_j = {
-  'name':'j',
-  'root':[0,0],
-  'set':[[0,0],[1,0],[2,0],[0,1]],
-  'color':'blue',
-  'rotate':1,
-  'id':4,}
-mino_l = {
-  'name':'l',
-  'root':[0,0],
-  'set':[[0,0],[1,0],[2,0],[2,1]],
-  'color':'orange',
-  'rotate':1,
-  'id':5,}
-mino_t = {
-  'name':'t',
-  'root':[0,0],
-  'set':[[0,0],[1,0],[2,0],[2,1]],
-  'color':'purple',
-  'rotate':3,
-  'id':6,}'''
 
