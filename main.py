@@ -1,7 +1,6 @@
 from random import randint
 from copy import copy
 from itertools import product
-from time import sleep
 import scene, ui
 
 from pprint import pprint
@@ -191,12 +190,13 @@ class TetrisMain(scene.Node):
     self.actn = ActionMinos()
 
     self.set_x = int(self.row/2)-1
-    self.set_y = int(self.clo -2)
+    self.set_y = int(self.clo -3)
     self.set_root = [self.set_x, self.set_y]
     self.wall_bloks = []
     self.fixed_bloks =[]
     self.line_x = self.row-1
     self.line_y = self.clo-3
+    self.end_line = 21
     self.start()
 
   def start(self):
@@ -212,13 +212,13 @@ class TetrisMain(scene.Node):
   
   def create_field(self):
     self.blocks = [[self.setup_blocks(r, c) for c in range(self.clo)]for r in range(self.row)]
-    x_pos = (self.parent_x*.5
+    self.x_pos = (self.parent_x*.5
            - self.bbox[2]*.5
            + self.bw*.5)
-    y_pos = (self.parent_y*.5
+    self.y_pos = (self.parent_y*.5
            - self.bbox[3]*.38
            + self.bh*.5)
-    self.position = (x_pos, y_pos)
+    self.position = (self.x_pos, self.y_pos)
 
   def setup_blocks(self, r, c):
     block = Block(r,c)
@@ -249,11 +249,11 @@ class TetrisMain(scene.Node):
 
   def set_wall(self, block):
     if block.x < 3:
-      if block.y > self.clo-4 or block.x == 0:
+      if block.y > self.end_line-1 or block.x == 0:
         self.wall_bloks.append(block.b_pos)
         block.is_wall()
     if block.x > self.row-4:
-      if block.y > self.clo-4 or block.x == self.row-1:
+      if block.y > self.end_line-1 or block.x == self.row-1:
         self.wall_bloks.append(block.b_pos)
         block.is_wall()
     if block.y == 0:
@@ -268,11 +268,27 @@ class TetrisMain(scene.Node):
       else:
         self.blocks[x][y].is_default()
   
+  def hit_action(self, n):
+    left = scene.Action.move_by(-2.56, 0, .1)
+    right = scene.Action.move_by(2.56, 0, .1)
+    if n == 1:
+      return scene.Action.sequence(left, right) 
+    if n == 2:
+      return scene.Action.sequence(right, left) 
+    
+  
   def move(self, mino, n):
     if not self.is_hit(mino, n):
       self.color_mino(mino, False)
       self.judg_move(mino, n)
       self.color_mino(mino)
+    else:
+      self.Adjust_pos()
+      if n == 0:
+        self.run_action(self.fix_down())
+        self.set_fix(mino)
+      if n == 1: self.run_action(self.hit_action(n))
+      if n == 2: self.run_action(self.hit_action(n))
   
   def is_hit(self, mino, n):
     pre = copy(mino)
@@ -292,17 +308,46 @@ class TetrisMain(scene.Node):
         return True
     return False
   
+  def Adjust_pos(self):
+    if self.position != (self.x_pos, self.y_pos):
+      self.position = (self.x_pos, self.y_pos)
+  
+  def fix_down(self):
+    down = scene.Action.move_by(0, -2.56, .1)
+    up = scene.Action.move_by(0, 2.56, .1)
+    return scene.Action.sequence(down, up) 
+  
   def down_call(self):
+    self.Adjust_pos()
     if not self.is_hit(self.mino, 0):
       self.color_mino(self.mino, False)
       self.set_up.set_root(self.mino, self.actn.down)
       self.color_mino(self.mino)
     else:
+      self.run_action(self.fix_down())
       self.set_fix(self.mino)
       
-      
+  def game_over(self):
+    if len(self.fixed_bloks):
+      for y in self.fixed_bloks:
+        if y[1] == self.end_line:
+          self.stop()
+    
+  def reset(self):
+    for x in range(self.row):
+      for y in range(self.clo):
+        self.blocks[x][y].remove_from_parent()
+    self.wall_bloks = []
+    self.fixed_bloks =[]
+    #self.blocks = []
+    self.create_field()
+    
+    
   def set_fix(self, mino):
     for fix in mino['set']:
+      if fix[1] == self.end_line:
+        self.reset()
+        break
       self.fixed_bloks.append(fix)
       x, y = fix
       self.blocks[x][y].is_fixed()
@@ -397,8 +442,15 @@ class MainScene(scene.Scene):
     # --- btn end
 
   def update(self):
-    #pass
     self.tetris.manage_update(self.dt)
+
+  def did_evaluate_actions(self):
+    pass
+    '''
+    if not self.tetris.position == (self.tetris.x_pos, self.tetris.y_pos):
+      self.tetris.position = self.tetris.x_pos, self.tetris.y_pos'''
+      
+
 
   def touch_began(self, touch):
     # fixme: 長押し処理 🤔
