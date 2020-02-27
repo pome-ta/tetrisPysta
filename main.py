@@ -3,8 +3,6 @@ from copy import copy
 from itertools import product
 import scene, ui
 
-from pprint import pprint
-
 
 main_color = 'darkslategray'
 stop_color = 'maroon'
@@ -181,8 +179,8 @@ class TetrisMain(scene.Node):
     self.play_speed = 1
     self.dt = 0.0
     self.parent_x, self.parent_y = parent_size
-    self.w = self.parent_x*.92
-    self.h = self.parent_y*.80
+    self.w = self.parent_x*.80
+    self.h = self.parent_y*.72
     self.bw = self.w/self.row
     self.bh = self.h/self.clo
 
@@ -197,11 +195,13 @@ class TetrisMain(scene.Node):
     self.line_x = self.row-1
     self.line_y = self.clo-3
     self.end_line = 21
+    self.s_point = 0
     self.start()
 
   def start(self):
     self.create_field()
     self.create_mino()
+    self.score_board()
 
   def create_mino(self):
     mino = self.set_up.push()
@@ -222,23 +222,24 @@ class TetrisMain(scene.Node):
 
   def setup_blocks(self, r, c):
     block = Block(r,c)
+    wh = min(self.bw, self.bh)
     '''
     path = ui.Path.rounded_rect
     block.path = path(0, 0,
-                 self.bw, self.bh, 8)
+                 wh, wh, 8)
     '''
     block.path = ui.Path.rect(0, 0,
-                 self.bw, self.bh)
+                 wh, wh)
     block.line_width = 1
     block.stroke_color = main_color
     block.position = (block.x*self.bw,
                       block.y*self.bh)
     self.set_wall(block)
-    ''' top の2行消す
+    # top の2行消す
     if not(block.y > self.clo-3):
       self.add_child(block)
-    '''
-    self.add_child(block)
+    #self.add_child(block)
+    
     # todo: debug 用 (座標出す)
     num = scene.LabelNode(f'{r},{c}',
           font = ('Ubuntu Mono', 10))
@@ -326,12 +327,6 @@ class TetrisMain(scene.Node):
     else:
       self.run_action(self.fix_down())
       self.set_fix(self.mino)
-      
-  def game_over(self):
-    if len(self.fixed_bloks):
-      for y in self.fixed_bloks:
-        if y[1] == self.end_line:
-          self.stop()
     
   def reset(self):
     for x in range(self.row):
@@ -339,6 +334,7 @@ class TetrisMain(scene.Node):
         self.blocks[x][y].remove_from_parent()
     self.wall_bloks = []
     self.fixed_bloks =[]
+    self.s_point = 0
     #self.blocks = []
     self.create_field()
     
@@ -363,6 +359,7 @@ class TetrisMain(scene.Node):
             fix.append([x, y])
             if len(fix) == self.row-2:
               self.clear_line(fix, self.fixed_bloks)
+              self.s_point += 1
             else: continue
           else: continue
       else: continue
@@ -397,13 +394,18 @@ class TetrisMain(scene.Node):
     self.dt += main_dt
     if self.dt > self.play_speed:
       self.down_call()
+      #self.s_point += 1
+      self.score.text = f'Score: {self.s_point}'
       self.dt = 0
 
-
+  def score_board(self):
+    self.score = scene.LabelNode()
     
-  
-
-
+    self.score.text = f'Score: {self.s_point}'
+    self.score.anchor_point = (0,1)
+    self.score.position = (-self.score.size[0]/2.56, self.w*2 - self.score.size[1]*2)
+    self.add_child(self.score)
+    
 
 class MainScene(scene.Scene):
   def setup(self):
@@ -412,7 +414,6 @@ class MainScene(scene.Scene):
     self.tetris = TetrisMain(self.size)
     #self.mino = self.tetris.mino
     self.add_child(self.tetris)
-
     # --- btn start
     path = ui.Path.oval(0,0,72,72)
     self.d_btn = scene.ShapeNode(path=path,parent=self,fill_color = 'white')
@@ -446,12 +447,7 @@ class MainScene(scene.Scene):
 
   def did_evaluate_actions(self):
     pass
-    '''
-    if not self.tetris.position == (self.tetris.x_pos, self.tetris.y_pos):
-      self.tetris.position = self.tetris.x_pos, self.tetris.y_pos'''
-      
-
-
+    
   def touch_began(self, touch):
     # fixme: 長押し処理 🤔
     if touch.location in (self.d_btn.frame):
@@ -498,7 +494,7 @@ class MainScene(scene.Scene):
 
 main = MainScene()
 scene.run(main,
-          orientation='PORTRAIT',
+          orientation=1,
           frame_interval=2,
           show_fps=True)
 
