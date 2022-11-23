@@ -48,79 +48,43 @@ class SetUpMinos:
     i_rotate = ([[-1, 0], [0, 0], [1, 0], [2, 0]], [[1, -2], [1, -1], [1, 0],
                                                     [1, 1]],
                 [[-1, -1], [0, -1], [1, -1], [2, -1]], [[0, -2], [0, -1],
-                                                        [0, 0], [0, 1]], )
-    mino_i = {
-      'name': 'i',
-      'color': 'cyan',
-      'rotate': i_rotate,
-    }
+                                                        [0, 0], [0, 1]])
+    mino_i = {'name': 'i', 'color': 'cyan', 'rotate': i_rotate}
 
-    o_rotate = ([[0, 0], [0, 1], [1, 0], [1, 1]], )
-    mino_o = {
-      'name': 'o',
-      'color': 'yellow',
-      'rotate': o_rotate,
-    }
+    o_rotate = ([[0, 0], [0, 1], [1, 0], [1, 1]])
+    mino_o = {'name': 'o', 'color': 'yellow', 'rotate': o_rotate}
 
     s_rotate = ([[-1, 0], [0, 0], [0, 1], [1, 1]], [[0, 1], [0, 0], [1, 0],
                                                     [1, -1]],
                 [[-1, -1], [0, -1], [0, 0], [1, 0]], [[-1, 1], [-1, 0], [0, 0],
-                                                      [0, -1]], )
-    mino_s = {
-      'name': 's',
-      'color': 'green',
-      'rotate': s_rotate,
-    }
+                                                      [0, -1]])
+    mino_s = {'name': 's', 'color': 'green', 'rotate': s_rotate}
 
     z_rotate = ([[0, 1], [1, 1], [1, 0], [2, 0]], [[1, 0], [1, 1], [2, 2],
                                                    [2, 1]],
                 [[0, 2], [1, 2], [1, 1], [2, 1]], [[0, 0], [0, 1], [1, 2],
-                                                   [1, 1]], )
-    mino_z = {
-      'name': 'z',
-      'color': 'red',
-      'rotate': z_rotate,
-    }
+                                                   [1, 1]])
+    mino_z = {'name': 'z', 'color': 'red', 'rotate': z_rotate}
 
     j_rotate = ([[0, 0], [1, 0], [2, 0], [0, 1]], [[1, 1], [1, 0], [2, 1],
                                                    [1, -1]],
                 [[0, 0], [1, 0], [2, -1], [2, 0]], [[1, 1], [1, 0], [0, -1],
-                                                    [1, -1]], )
-    mino_j = {
-      'name': 'j',
-      'color': 'blue',
-      'rotate': j_rotate,
-    }
+                                                    [1, -1]])
+    mino_j = {'name': 'j', 'color': 'blue', 'rotate': j_rotate}
 
     l_rotate = ([[0, 0], [1, 0], [2, 0], [2, 1]], [[1, 1], [1, 0], [2, -1],
                                                    [1, -1]],
                 [[0, 0], [1, 0], [0, -1], [2, 0]], [[1, 1], [1, 0], [1, -1],
-                                                    [0, 1]], )
-    mino_l = {
-      'name': 'l',
-      'color': 'orange',
-      'rotate': l_rotate,
-    }
+                                                    [0, 1]])
+    mino_l = {'name': 'l', 'color': 'orange', 'rotate': l_rotate}
 
     t_rotate = ([[0, 0], [1, 0], [2, 0], [1, 1]], [[1, -1], [1, 0], [2, 0],
                                                    [1, 1]],
                 [[1, -1], [1, 0], [2, 0], [0, 0]], [[1, -1], [1, 0], [1, 1],
-                                                    [0, 0]], )
-    mino_t = {
-      'name': 't',
-      'color': 'purple',
-      'rotate': t_rotate,
-    }
+                                                    [0, 0]])
+    mino_t = {'name': 't', 'color': 'purple', 'rotate': t_rotate}
 
-    self.mino_list = [
-      mino_i,
-      mino_o,
-      mino_s,
-      mino_z,
-      mino_j,
-      mino_l,
-      mino_t,
-    ]
+    self.mino_list = [mino_i, mino_o, mino_s, mino_z, mino_j, mino_l, mino_t]
 
   def push(self):
     mino = self.get_list(self.mino_list)
@@ -508,10 +472,6 @@ class MainScene(scene.Scene):
 
 
 main = MainScene()
-scene.run(
-  main,
-  orientation=1,
-  frame_interval=2,
-  show_fps=True, )
+scene.run(main, orientation=1, frame_interval=2, show_fps=True)
 
 
