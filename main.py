@@ -206,6 +206,7 @@ class TetrisMain(scene.Node):
     block = Block(r, c)
     wh = min(self.bw, self.bh)
     '''
+    # todo: こちらでも可
     path = ui.Path.rounded_rect
     block.path = path(0, 0,
                  wh, wh, 8)
