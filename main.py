@@ -1,7 +1,8 @@
 from random import randint
 from copy import copy
 from itertools import product
-import scene, ui
+import scene
+import ui
 
 main_color = 'darkslategray'
 stop_color = 'maroon'
