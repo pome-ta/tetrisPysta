@@ -474,6 +474,10 @@ class MainScene(scene.Scene):
 
 
 main = MainScene()
-scene.run(main, orientation=1, frame_interval=2, show_fps=True)
+scene.run(
+  main,
+  orientation=1,
+  frame_interval=2,
+  show_fps=True, )
 
 
